@@ -40,6 +40,8 @@ var download = function download(source) {
   var output = _ref.output;
   var onStart = _ref.onStart;
   var onProgress = _ref.onProgress;
+  var _ref$followRedirects = _ref.followRedirects;
+  var followRedirects = _ref$followRedirects === undefined ? true : _ref$followRedirects;
   var code = arguments.length <= 2 || arguments[2] === undefined ? null : arguments[2];
 
   return new Promise(function (y, n) {
@@ -115,7 +117,7 @@ var download = function download(source) {
             y({ headers: res.headers, fileSize: fileSize, statusCodes: statusCodes });
           });
         })();
-      } else if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307) {
+      } else if (followRedirects && (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307)) {
         var redirectLocation = res.headers.location;
 
         if (verbose) {
@@ -127,6 +129,8 @@ var download = function download(source) {
           onStart: onStart,
           onProgress: onProgress
         }, statusCodes).then(y)["catch"](n);
+      } else if (!followRedirects && (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307)) {
+        y({ headers: res.headers, fileSize: 0, statusCodes: statusCodes });
       } else {
         n("Server responded with unhandled status: " + res.statusCode);
       }

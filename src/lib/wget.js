@@ -13,7 +13,7 @@ import fs from "fs";
  */
 export const download = (
   source,
-  { verbose, output, onStart, onProgress } = {},
+  { verbose, output, onStart, onProgress, followRedirects = true } = {},
   code = null
 ) => {
   return new Promise((y, n) => {
@@ -90,9 +90,10 @@ export const download = (
             y({ headers: res.headers, fileSize, statusCodes });
           });
         } else if (
-          res.statusCode === 301 ||
-          res.statusCode === 302 ||
-          res.statusCode === 307
+          followRedirects &&
+          (res.statusCode === 301 ||
+            res.statusCode === 302 ||
+            res.statusCode === 307)
         ) {
           const redirectLocation = res.headers.location;
 
@@ -111,6 +112,13 @@ export const download = (
           )
             .then(y)
             .catch(n);
+        } else if (
+          !followRedirects &&
+          (res.statusCode === 301 ||
+            res.statusCode === 302 ||
+            res.statusCode === 307)
+        ) {
+          y({ headers: res.headers, fileSize: 0, statusCodes });
         } else {
           n("Server responded with unhandled status: " + res.statusCode);
         }

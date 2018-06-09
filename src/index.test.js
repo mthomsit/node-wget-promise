@@ -154,4 +154,29 @@ describe("Integration tests", function() {
         expect(err).to.be.null;
       });
   });
+
+  it("should ignore redirects if followRedirects is false", function(done) {
+    const Bytes = 1024;
+    const fileName = "index.html";
+    wget("http://www.kimo.com/index.html", {
+      onStart: headers => {
+        expect(headers["content-type"]).to.be.contains("text/html");
+      },
+      onProgress: progress => {},
+      output: fileName,
+      followRedirects: false
+    })
+      .then(result => {
+        expect(result.statusCodes).to.exist;
+        expect(result.statusCodes.length).to.equal(1);
+        expect(result.statusCodes[0]).to.equal(301);
+        expect(result.fileSize).to.equal(0);
+
+        done();
+      })
+      .catch(err => {
+        console.log(err);
+        expect(err).to.be.null;
+      });
+  });
 });
